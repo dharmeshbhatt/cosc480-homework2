@@ -1,8 +1,14 @@
 # in app/controllers/movies_controller.rb
 
 class MoviesController < ApplicationController
+
+  def self.ratings
+    @ratings = 
+  end
+
   def index
-    @movies = Movie.all
+    @sort = params[:sort_by]
+    @movies = Movie.all(:order => params[:sort_by])
   end
 
   def show
@@ -38,4 +44,5 @@ class MoviesController < ApplicationController
     flash[:notice] = "Movie '#{@movie.title}' deleted."
     redirect_to movies_path
   end
+  
 end
