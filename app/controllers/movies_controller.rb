@@ -3,12 +3,34 @@
 class MoviesController < ApplicationController
 
   def self.ratings
-    @ratings = 
+    Movie.uniq.pluck(:rating)
   end
 
   def index
-    @sort = params[:sort_by]
-    @movies = Movie.all(:order => params[:sort_by])
+    @all_ratings = MoviesController.ratings
+    @valid_ratings = []
+    if not session.has_key?(:has_visited_before) 
+      session[:has_visited_before] = 1
+      @valid_ratings = @all_ratings
+      session[:ratings] = @valid_ratings
+    else
+      if params.has_key?(:sort_by)
+        session[:sort_by] = params[:sort_by]
+      end
+    end
+    
+    if params.has_key?(:ratings)
+      params[:ratings].each_pair do |rating, val|
+        @valid_ratings << rating
+      end
+      session[:ratings] = @valid_ratings
+    else
+      @valid_ratings = session[:ratings]
+    end
+    
+    @sort = session[:sort_by]
+    @movies = Movie.where(:rating =>  session[:ratings]).order(session[:sort_by])
+    
   end
 
   def show
