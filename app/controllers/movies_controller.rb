@@ -8,28 +8,44 @@ class MoviesController < ApplicationController
 
   def index
     @all_ratings = MoviesController.ratings
-    @valid_ratings = []
+    @valid_ratings = {}
+    redirect = false
     if not session.has_key?(:has_visited_before) 
       session[:has_visited_before] = 1
-      @valid_ratings = @all_ratings
+      @all_ratings.each do |rating|
+        @valid_ratings[rating.to_str] = "1"
+      end
       session[:ratings] = @valid_ratings
+      redirect = true
     else
-      if params.has_key?(:sort_by)
+      if session.has_key?(:sort_by) 
+        if params[:sort_by] == nil
+          redirect = true
+          params[:sort_by] = session[:sort_by]
+        else
+          session[:sort_by] = params[:sort_by]
+        end
+      else
         session[:sort_by] = params[:sort_by]
       end
     end
     
     if params.has_key?(:ratings)
       params[:ratings].each_pair do |rating, val|
-        @valid_ratings << rating
+        @valid_ratings[rating.to_str] = "1"
       end
       session[:ratings] = @valid_ratings
     else
-      @valid_ratings = session[:ratings]
+      redirect = true
+      params[:ratings] = session[:ratings]
+    end
+
+    if redirect
+      redirect_to(params)
     end
     
-    @sort = session[:sort_by]
-    @movies = Movie.where(:rating =>  session[:ratings]).order(session[:sort_by])
+    @sort = params[:sort_by]
+    @movies = Movie.where(:rating =>  params[:ratings].keys).order(params[:sort_by])
     
   end
 
