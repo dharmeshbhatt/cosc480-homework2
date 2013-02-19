@@ -18,7 +18,13 @@ class MoviesController < ApplicationController
       session[:ratings] = @valid_ratings
       redirect = true
     else
-      if session.has_key?(:sort_by) 
+      if not validate_params(params)
+        redirect = true
+        if session.has_key?(:sort_by)
+          params[:sort_by] = session[:sort_by]
+        end
+        params[:ratings] = session[:ratings]
+      elsif session.has_key?(:sort_by) 
         if params[:sort_by] == nil
           redirect = true
           params[:sort_by] = session[:sort_by]
@@ -46,7 +52,21 @@ class MoviesController < ApplicationController
     
     @sort = params[:sort_by]
     @movies = Movie.where(:rating =>  params[:ratings].keys).order(params[:sort_by])
-    
+  end
+  
+  def validate_params(params)
+    if params.has_key?(:sort_by)
+      if not ["release_date", "title"].any? {|sort| sort == params[:sort_by]}
+        return false
+      end
+    end
+    if params.has_key?(:ratings) and params[:ratings].each_pair do |rating, val|
+        if not @all_ratings.any? {|a_rating| a_rating == rating}
+          return false
+        end
+      end
+    end
+    return true
   end
 
   def show
